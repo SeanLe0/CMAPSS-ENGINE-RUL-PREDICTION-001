@@ -1,0 +1,124 @@
+define trainingdata
+define testdata
+define trueRUL
+
+define divide function (randomize with seed and divide 80-20 training and validate data, output matrix1 80, matrix2 20)
+define copy2 function (copy row2 and invert into new matrixRUL, put limit 0<= x <= 125; output as mx of RUL only)
+
+divide trainingdata
+output truetrainingmx, validatetrainingmx
+
+copy2 truetrainingmx output truetrainingRUL
+copy2 validatetrainingmx output validatetrainingRUL
+
+define variables and dimensions
+x: [26, 1]
+n:
+h-1: [n, 1]
+Wf, Wi, Wc, Wo: [n, 26+n]
+bf, bi, bc, bo: [n, 1]
+ft, it, ot: [n, 1]
+Cbart: [n, 1]
+C-1: [n, 1]
+ht: [n, 1]
+Wy: [1, n]
+by: [1]
+yt: [1]
+
+define function train (truetrainingmx, truetrainingRUL)
+for loop n from 2, 4, 8, 16:
+	for loop t from 0:
+		xt = truetrainingmx(26, t)
+		zt = [ht-1, xt]; if t=0, z0 = [h-1, x0]
+		truey = truetrainingRUL(t)
+		#forward feed
+		ft = sigmoid(wf*zt + bf)
+		it = sigmoid(wi*zt + bi)
+		Ct = ft*Ct-1+it*Cbart
+		ot = sigmoid(wo*zt + bo)
+		ht = ot*tanh(Ct)
+		yt = Wy*ht + by
+		L = (yt - truey(t))^2/2
+		#back propagation
+		eta = adams algorithm
+		dLdCt = (yt-truey(t))*Wy*(ot*sech(t)^2)
+		dLdht = (yt-truey(t))*Wy
+		derb = 1 #derived b 1x1
+		Wf = Wf - eta*dLdCt*Ct-1*ft(1-ft) x zttranspose
+		Wi = Wi - eta*Cbart*it(1-it) x zttranspose
+		Wc = Wc - eta*dLdCt*tanh(Ct)*(1-Cbart^2) x zttranspose
+		Wo = Wo - eta*dLdht*tanh(Ct)*ot(1-ot) x zttranspose
+		Wy = Wy - eta*(yt-truey(t)) x httranspose
+		bf = bf - eta*dLdCt*Ct-1*ft*(1-ft) x derb
+		bi = bi - eta*dLdCt*Cbart*it*(1-it) x derb
+		bc = bc - eta*dLdCt*it*(1-Cbart^2) x derb
+		bo = bo - eta*dLdht*tanh(Ct)*ot*(1-ot) x derb
+		by = by - eta*(yt-truey(t)) x derb
+
+		
+		if lent == t:
+			print wt, bt, ct, ht
+		output wt as w(n), bt as b(n), ct as c(n), ht as h(n)
+	output and store information as:
+	W2, b2, C2, h2,
+	W4, b4, C4, h4,
+	W8, b8, C8, h8, 
+	W16, b16, C16, h16,
+	#(shortened because too many w and b)
+
+ train (truetrainingmx, truetrainingRUL)
+	output 	W2, b2, C2, h2,
+		W4, b4, C4, h4,
+		W8, b8, C8, h8, 
+		W16, b16, C16, h16,
+		#(shortened because too many w and b)
+
+define function validate (validatetrainingmx, validatetrainingRUL)
+for loop n from 2, 4, 8, 16:
+	for loop t from 0:
+		xt = validatetrainingmx(26, t)
+		zt = [ht-1, xt]; if t=0, z0 = [h-1, x0]
+		truey = validatetrainingRUL(t)
+		#forward feed
+		ft = sigmoid(wf*zt + bf)
+		it = sigmoid(wi*zt + bi)
+		Ct = ft*Ct-1+it*Cbart
+		ot = sigmoid(wo*zt + bo)
+		ht = ot*tanh(Ct)
+		yt = Wy*ht + by
+		L = (yt - truey(t))^2/2
+		calculate RMSE, print and output RMSE
+	RMSE2, RMSE4, RMSE8, RMSE16, pick the smallest, output (RMSE, n which number of hidden state is the best)
+
+validate (validatetrainingmx, validatetrainingRUL)
+	output (RMSE, n)
+
+m = n that has the smallest RMSE
+
+define test (testdata, trueRUL)
+	for loop t from 0:
+		xt = testdata [26,t]
+		truey = trueRUL [a]
+		#forward feed
+		ft = sigmoid(wf*zt + bf)
+		it = sigmoid(wi*zt + bi)
+		Ct = ft*Ct-1+it*Cbart
+		ot = sigmoid(wo*zt + bo)
+		ht = ot*tanh(Ct)
+		yt = Wy*ht + by
+		
+		#check column and update truey
+		if xt+1>xt or xt is the biggest
+			d[t] = y[t]- truey #make a matrix of the score per engine d
+		output Wn, bn, Cn, hn, d #(shortened because too many w and b)
+
+test (testdata, trueRUL)
+	output Wn, bn, Cn, hn, d #(shortened because too many w and b)
+
+define scoring (d)
+	if d<0: sigma 0 to t e^(-d/10)
+	if d>=0: sigma 0 to t e^(-d/13)
+	output the score_sum
+
+scoring (d)
+	output score_sum
